@@ -114,7 +114,6 @@ class _HomePageState extends State<HomePage> {
                     fontSize: 20, fontWeight: FontWeight.bold),
               ),
             ),
-
             // List Transaction
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
