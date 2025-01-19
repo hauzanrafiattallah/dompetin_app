@@ -37,6 +37,8 @@ dependencies:
   google_fonts: ^4.0.3
   calendar_appbar: ^0.0.6
   intl: ^0.17.0
+  drift: ^2.23.1
+  drift_flutter: ^0.2.4
 
 dev_dependencies:
   flutter_test:
@@ -48,6 +50,8 @@ dev_dependencies:
   # package. See that file for information about deactivating specific lint
   # rules and activating additional ones.
   flutter_lints: ^5.0.0
+  drift_dev: ^2.23.1
+  build_runner: ^2.4.14
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
