@@ -1,95 +1,170 @@
+import 'dart:math';
+
 import 'package:calendar_appbar/calendar_appbar.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/src/foundation/key.dart';
+import 'package:flutter/src/widgets/framework.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:intl/intl.dart';
+import 'package:dompetin/models/database.dart';
 import 'package:dompetin/pages/category_page.dart';
 import 'package:dompetin/pages/home_page.dart';
 import 'package:dompetin/pages/transaction_page.dart';
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+  const MainPage({Key? key}) : super(key: key);
 
   @override
   State<MainPage> createState() => _MainPageState();
 }
 
 class _MainPageState extends State<MainPage> {
-  final List<Widget> _children = [
-    HomePage(),
-    CategoryPage(),
-  ];
-  int currentIndex = 0;
+  late DateTime selectedDate;
+  late List<Widget> _children;
+  late int currentIndex;
 
-  void onTapTapped(int index) {
+  final database = AppDb();
+
+  TextEditingController categoryNameController = TextEditingController();
+
+  @override
+  void initState() {
+    updateView(0, DateTime.now());
+
+    super.initState();
+  }
+
+  Future<List<Category>> getAllCategory() {
+    return database.select(database.categories).get();
+  }
+
+  void showAwe() async {
+    List<Category> al = await getAllCategory();
+    print('PANJANG : ' + al.length.toString());
+  }
+
+  void showSuccess(BuildContext context) {
+    // set up the button
+    Widget okButton = TextButton(
+      child: Text("OK"),
+      onPressed: () {},
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text("My title"),
+      content: Text("This is my message."),
+      actions: [
+        okButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  void updateView(int index, DateTime? date) {
     setState(() {
+      if (date != null) {
+        selectedDate = DateTime.parse(DateFormat('yyyy-MM-dd').format(date));
+      }
+
       currentIndex = index;
+      _children = [
+        HomePage(
+          selectedDate: selectedDate,
+        ),
+        CategoryPage()
+      ];
+    });
+  }
+
+  void onTabTapped(int index) {
+    setState(() {
+      selectedDate =
+          DateTime.parse(DateFormat('yyyy-MM-dd').format(DateTime.now()));
+      currentIndex = index;
+      _children = [
+        HomePage(
+          selectedDate: selectedDate,
+        ),
+        CategoryPage()
+      ];
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: (currentIndex == 0)
-          ? CalendarAppBar(
-              accent: Colors.green,
-              backButton: false,
-              locale: 'id',
-              onDateChanged: (value) => print(value),
-              firstDate: DateTime.now().subtract(Duration(days: 140)),
-              lastDate: DateTime.now(),
-            )
-          : PreferredSize(
-              preferredSize: Size.fromHeight(200),
-              child: Container(
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 40, vertical: 70),
-                  child: Text(
-                    "Categories",
-                    style: GoogleFonts.montserrat(fontSize: 30),
-                  ),
-                ),
-              ),
-            ),
-      floatingActionButton: Visibility(
-        visible: (currentIndex == 0) ? true : false,
-        child: FloatingActionButton(
-          onPressed: () {
-            Navigator.of(context)
-                .push(
-              MaterialPageRoute(builder: (context) => TransactionPage()),
-            )
-                .then((value) {
-              setState(() {});
-            });
-          },
-          backgroundColor: Colors.green,
-          child: Icon(Icons.add),
+        floatingActionButton: Visibility(
+          visible: (currentIndex == 0) ? true : false,
+          child: FloatingActionButton(
+              onPressed: () {
+                Navigator.of(context)
+                    .push(MaterialPageRoute(
+                  builder: (context) =>
+                      TransactionPage(transactionsWithCategory: null),
+                ))
+                    .then((value) {
+                  setState(() {
+                    updateView(0, DateTime.now());
+                  });
+                });
+              },
+              backgroundColor: Colors.green,
+              child: Icon(Icons.add)),
         ),
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      body: _children[currentIndex],
-      bottomNavigationBar: BottomAppBar(
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        bottomNavigationBar: BottomAppBar(
+            child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
             IconButton(
-              onPressed: () {
-                onTapTapped(0);
-              },
-              icon: Icon(Icons.home),
-            ),
+                onPressed: () {
+                  updateView(0, DateTime.now());
+                },
+                icon: Icon(Icons.home)),
             SizedBox(
               width: 20,
             ),
             IconButton(
-              onPressed: () {
-                onTapTapped(1);
-              },
-              icon: Icon(Icons.list),
-            ),
+                onPressed: () {
+                  updateView(1, DateTime.now());
+                },
+                icon: Icon(Icons.list))
           ],
-        ),
-      ),
-    ); // Penutupan Scaffold
+        )),
+        body: _children[currentIndex],
+        appBar: (currentIndex == 1)
+            ? PreferredSize(
+                preferredSize: const Size.fromHeight(100),
+                child: Container(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        vertical: 36, horizontal: 16),
+                    child: Text(
+                      "Categories",
+                      style: GoogleFonts.montserrat(fontSize: 20),
+                    ),
+                  ),
+                ),
+              )
+            : CalendarAppBar(
+                fullCalendar: true,
+                backButton: false,
+                accent: Colors.green,
+                locale: 'en',
+                onDateChanged: (value) {
+                  setState(() {
+                    selectedDate = value;
+                    updateView(0, selectedDate);
+                  });
+                },
+                lastDate: DateTime.now()));
   }
 }
